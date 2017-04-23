@@ -1,4 +1,6 @@
 # Lab 4: ArduBoost
+(Disclaimer: I have posted a working code example to guide you along.  This is meant to help you along so you don't get stuck on little things that only one TA knows so you can more efficiently learn and complete the lab.)
+
 This lab will apply concepts from the past 3 labs into developing a boost power supply controlled by an Arduino (codenamed ArduBoost).  This lab will also introduce you to the basics of power supply design and control theory.
 
 More specifically, you will be using feedback from a rotary encoder to precisely regulate the output voltage of a boost power supply and display the regulated voltage on a 4 digit LCD screen.
