@@ -21,15 +21,21 @@ You may remember that properly implementing an LED requires a current limiting r
 
 As you can see, 12 outputs are needed to control the 4 digits (8 for the segments and 4 for the digits).  The arduino has only 13 digital IO pins, so we shall seek to reduce the number of IO pins we use to control the LED.  One common device designed to reduce numbers of IO pins is a serial to parallel shift register.  This integrated circuit can read a series of 1s and 0s and convert it to a set of parallel outputs.  These chips are useful if lots of digital outputs are needed and refresh rates are not critical (it takes a lot of time to send that serial).
 
-Simple operation of serial to parallel shift registers requires a 3 wire interface.  One wire is denote as the data pin, which sends out the serialized data to be written to the shift register outputs.  Another wire is the clock pin, which tells the shift register when new bits are being sent.  The third pin is the latch pin, which tells the shift register when a transmission starts and stops.  On our chip (SN74HC595N), the data pin is 14 (SER), the clock pin is 11 (SRCLK), and the latch pin is 12 (RCLK).
+Simple operation of serial to parallel shift registers requires a 4 wire interface.  One wire is denote as the data pin, which sends out the serialized data to be written to the shift register outputs.  Another wire is the clock pin, which tells the shift register when new bits are being sent.  The third pin is the latch pin, which tells the shift register when a transmission starts and stops.  The fourth pin is the serial reset pin, which tells the shift register when a new shift is going to happen.  On our chip (SN74HC595N), the data pin is 14 (SER), the clock pin is 11 (SRCLK), the latch pin is 12 (RCLK), and the serial clear pin is 10 (SRCLR).  
 
-<b>Place the shift register in the breadboard and connect pins 11,12, and 14 on the shift register to pins 10,11, and 12 on the Arduino, respectively.</b>  They can actually be connected to any digital output pins you want because Arduino handles shift registers in software, so if you want to change it up, just don't connect any of those pins to digital pins 0,1,2,3 or 6.  
+<b>Place the shift register in the breadboard and connect pins 10, 11, 12, and 14 on the shift register to pins 8,7, 4, and 5 on the Arduino, respectively.</b>  They can actually be connected to any digital output pins you want because Arduino handles shift registers in software, so if you want to change it up, just don't connect any of those pins to digital pins 0,1,2,3 or 6.  Below is some reference code for using shift registers:
 
-As you can see, this shift register has 8 outputs.  Our LED has 8 anodes.  What a coincidence!  <b>Connect each of the 8 outputs to the 8 current limiting resistors.</b>
+~~~~
+digitalWrite(clrPin,LOW);
+digitalWrite(clrPin,HIGH);
+digitalWrite(latchPin, LOW);
+shiftOut(serPin, clkPin, LSBFIRST, b);
+digitalWrite(latchPin,HIGH);
+~~~~
+
+As you can see, this shift register has 8 outputs.  Our LED has 8 anodes.  What a coincidence!  <b>Connect each of the 8 outputs to the 8 current limiting resistors.</b>  Fitting all of this on one board will be challenging, so look at the example board for reference.
 
 Now, to handle the 4 different digits.  As I mentioned earlier, if we connected multiple cathodes to ground the light output of each segment would drop due to increased current through the current limiting resistors.  We are going to mitigate this by cycling through each character one by one quickly.  Our eyes can easily be tricked that more than one digit is being turned on if we simply cycle through them, only turning one on at a time.  Grab four 2n4401 transistors from the lab and hook them up so that the emitter is to ground, the collector is to the cathodes of the LED, and the base is connected to four digital pins (not 0,1,2,3 or 6) through a base resistor (4.7k ohms).  When the digial pins are set to HIGH, they will drive the base of the transistor and pull current through the LEDs of that digit, allowing you to turn each digit on individually.  The reason that we don't use the arduino pins for this is because they can only sink ~20mA of current.
-
-<b>TL;DR Set up this schematic:</b> 
 
 As for the code, let us first define how we write each character to the shift register.  For example, if QA - QH on the shift register were mapped to A - DP on the LED, the letter A would be written as <code>0x11101110</code> if we assume that we shift out our least significant bit (LSB) first.  To make your lives easier, I've written the map from character to segment representation for you already: 
 
